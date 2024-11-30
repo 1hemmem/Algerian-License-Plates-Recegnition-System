@@ -57,39 +57,41 @@ class GeminiOCR:
     async def extract_text_from_image(self, image_path: str, prompt: str = None):
         """
         Extracts text from the image by calling the generative AI API.
-
-        Parameters:
-        - image_path: Path to the image file
-        - prompt: Instruction for the model on how to extract text
-
-        Returns:
-        - Extracted text from the license plate image
         """
+        if not os.path.exists(image_path):
+            logger.warning(f"File not found: {image_path}")
+            return None
 
-        if prompt is None:
-            prompt = """Extract the numbers from this license plate, 
-            the response should include only the result in the format: xxxxx xxx xx, Where all the x values are numbers"""
-        if os.path.exists(image_path):
-            # time.sleep(120)
+        try:
+            if prompt is None:
+                prompt = """Extract the numbers from this license plate, 
+                the response should include only the result in the format: xxxxx xxx xx, Where all the x values are numbers"""
+            
             sample = self.prep_image(image_path)
+            if not sample:
+                logger.error("Failed to prepare image")
+                return None
 
             model = genai.GenerativeModel(model_name=self.model_name)
 
-            # Try to call the model and handle quota-related exceptions
             while True:
                 try:
                     response = model.generate_content([sample, prompt])
+                    if not response.candidates:
+                        logger.warning("No response candidates received")
+                        return None
+                    
                     text_content = response.candidates[0].content.parts[0].text
-                    logger.info("Extracted text successfully.")
-                    return text_content
+                    logger.info(f"Extracted text: {text_content}")
+                    return text_content.strip()
 
                 except google.api_core.exceptions.ResourceExhausted:
-                    time.sleep(120)
                     logger.warning("Quota exceeded. Retrying after delay.")
                     time.sleep(self.retry_delay)
                 except Exception as e:
-                    time.sleep(120)
                     logger.error(f"Failed to extract text: {e}")
-                    raise
-        else:
-            logger.warning(f"File: {image_path} Does not exist yachkopi")
+                    return None
+
+        except Exception as e:
+            logger.error(f"Error processing image {image_path}: {e}")
+            return None

@@ -85,19 +85,33 @@ async def main():
                     # Process completed tracks
                     if (track_id in completed_tracks) and (completed_tracks[track_id]["ocred"]==False):
                         try:
+                            plate_path = completed_tracks[track_id]["plate_path"]
+                            
+                            # First check if the file exists
+                            if not os.path.exists(plate_path):
+                                logger.warning(f"Plate image not found: {plate_path}")
+                                completed_tracks[track_id]["ocred"] = True
+                                continue
+
                             plate_number = await ocr.extract_text_from_image(image_path=plate_path)
-                            completed_tracks[track_id]["ocred"]=True
-                            # completed_tracks = {k: v for k, v in completed_tracks.items() if k != track_id}
-                            # print(completed_tracks)
+                            
+                            # Only try to rename if we got a valid plate number
+                            if plate_number and isinstance(plate_number, str):
+                                path, _ = os.path.split(plate_path)
+                                new_path = os.path.join(path, f"{plate_number}.jpg")
+                                os.rename(plate_path, new_path)
+                            else:
+                                logger.warning(f"Invalid plate number returned for track {track_id}: {plate_number}")
+                                
+                            completed_tracks[track_id]["ocred"] = True
+                            
                         except FileNotFoundError as e:
-                            logger.error(f"Error loading file {plate_path}: {e}")
-                            continue
-                        # plate_number = ocr.extract_text_from_image(
-                        #     image_path=plate_path
-                        # )
-                        path, _ = os.path.split(plate_path)
-                        new_path = os.path.join(path, f"{plate_number}.jpg")
-                        os.rename(plate_path, new_path)
+                            logger.error(f"Error processing file {plate_path}: {e}")
+                            completed_tracks[track_id]["ocred"] = True
+                        except Exception as e:
+                            logger.error(f"Unexpected error processing track {track_id}: {e}")
+                            completed_tracks[track_id]["ocred"] = True
+                        
                         continue
 
                     bbox = track.to_tlbr()
