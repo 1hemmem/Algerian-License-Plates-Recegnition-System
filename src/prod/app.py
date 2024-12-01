@@ -10,9 +10,11 @@ from GeminiOcr import GeminiOCR
 from Utils import Utils
 from Filter import ImageProcessor, LicensePlateDetector
 import datetime
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 async def main(video_path):
     # Initialize the OCR model
@@ -31,7 +33,7 @@ async def main(video_path):
     )
     if video_path is None:
         video_path = "../../../Iphone_data/output1.mp4"
-    cap = cv2.VideoCapture()
+    cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         logger.error("Error: Could not open video file")
         return
@@ -40,7 +42,7 @@ async def main(video_path):
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     out = cv2.VideoWriter(
-        "../../../output.mp4", fourcc, 30, (frame_width, frame_height)
+        "../../../output.mp4", fourcc, 60, (frame_width, frame_height)
     )
 
     min_area_threshold = 10000
@@ -85,18 +87,22 @@ async def main(video_path):
                     track_id = track.track_id
 
                     # Process completed tracks
-                    if (track_id in completed_tracks) and (completed_tracks[track_id]["ocred"]==False):
+                    if (track_id in completed_tracks) and (
+                        completed_tracks[track_id]["ocred"] == False
+                    ):
                         try:
                             plate_path = completed_tracks[track_id]["plate_path"]
-                            
+
                             # First check if the file exists
                             if not os.path.exists(plate_path):
                                 logger.warning(f"Plate image not found: {plate_path}")
                                 completed_tracks[track_id]["ocred"] = True
                                 continue
 
-                            plate_number = await ocr.extract_text_from_image(image_path=plate_path)
-                            
+                            plate_number = await ocr.extract_text_from_image(
+                                image_path=plate_path
+                            )
+
                             # Only try to rename if we got a valid plate number
                             if plate_number and isinstance(plate_number, str):
                                 path, _ = os.path.split(plate_path)
@@ -105,21 +111,28 @@ async def main(video_path):
                                 current_minute = now.minute
                                 current_second = now.second
                                 current_date = now.date()
-                                new_path = os.path.join(path, f"lp: {plate_number} _time: {current_hour}:{current_minute}:{current_second}.{current_date}.jpg")
+                                new_path = os.path.join(
+                                    path,
+                                    f"lp: {plate_number} _time: {current_hour}:{current_minute}:{current_second}.{current_date}.jpg",
+                                )
 
                                 os.rename(plate_path, new_path)
                             else:
-                                logger.warning(f"Invalid plate number returned for track {track_id}: {plate_number}")
-                                
+                                logger.warning(
+                                    f"Invalid plate number returned for track {track_id}: {plate_number}"
+                                )
+
                             completed_tracks[track_id]["ocred"] = True
-                            
+
                         except FileNotFoundError as e:
                             logger.error(f"Error processing file {plate_path}: {e}")
                             completed_tracks[track_id]["ocred"] = True
                         except Exception as e:
-                            logger.error(f"Unexpected error processing track {track_id}: {e}")
+                            logger.error(
+                                f"Unexpected error processing track {track_id}: {e}"
+                            )
                             completed_tracks[track_id]["ocred"] = True
-                        
+
                         continue
 
                     bbox = track.to_tlbr()
@@ -144,7 +157,7 @@ async def main(video_path):
 
                     # Extract vehicle image and calculate quality metrics
                     vehicle_image = frame[y1:y2, x1:x2]
-                    if vehicle_image.shape[0]!=0:
+                    if vehicle_image.shape[0] != 0:
                         detection_success, plate_image, coord_plate = (
                             lpdetector.detect_plate(vehicle_image)
                         )
@@ -165,7 +178,7 @@ async def main(video_path):
                             track_id not in sharpness
                             or current_score > sharpness[track_id]["score"]
                         ):
-                            
+
                             if track_id in sharpness:
                                 os.remove(sharpness[track_id]["image_path"])
                                 try:
@@ -193,7 +206,7 @@ async def main(video_path):
                                 "score": current_score,
                                 "image_path": image_path,
                                 "plate_path": plate_path,
-                                "ocred":False,
+                                "ocred": False,
                             }
 
             out.write(frame)
@@ -210,7 +223,9 @@ async def main(video_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Vehicle detection and tracking.")
-    parser.add_argument("--path", type=str, required=True, help="Path to the input video file.")
+    parser.add_argument(
+        "--path", type=str, required=False, help="Path to the input video file."
+    )
     args = parser.parse_args()
-    
+
     asyncio.run(main(args.path))
