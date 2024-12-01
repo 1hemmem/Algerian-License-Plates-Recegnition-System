@@ -4,7 +4,7 @@
 The goal of this project is to develop a comprehensive end-to-end system that detects cars and their license plates, converts the license plate information into text using Optical Character Recognition (OCR), and stores both the high-quality images of the cars and license plates along with the extracted text and a timestamp indicating when the car passed the camera.
 
 ### Challenges
-- The object detection model (in this case YOLO) works per frame and do not care if the same (car/license plate) is detected twice, **where in our case we care so much!!  **
+- The object detection model (in this case YOLO) works per frame and do not care if the same (car/license plate) is detected twice, **where in our case we care so much!!**
 - Working with the object tracking and re-identification (DeepSORT)
 - Making the OCR work well required us to ensure that we feed it the best quality image that have a readable license plate during it's path in the frame.
 
