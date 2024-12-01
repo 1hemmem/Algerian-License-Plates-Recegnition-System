@@ -1,5 +1,6 @@
 # Algerian License Plate Recegnition System
 
+[Watch the demo video](https://youtu.be/HvMSLZRUBi8)
 ## Project Description
 The goal of this project is to develop a comprehensive end-to-end system that detects cars and their license plates, converts the license plate information into text using Optical Character Recognition (OCR), and stores both the high-quality images of the cars and license plates along with the extracted text and a timestamp indicating when the car passed the camera.
 
