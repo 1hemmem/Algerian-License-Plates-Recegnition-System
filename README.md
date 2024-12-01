@@ -29,6 +29,11 @@ install the required packages:
 cd src/
 pip install -r requirements.txt
 ```
+
+Run the application on your video:
+```
+cd prod/ && python app.py --path="your/path/to/video.mp4"
+```
   
 
 
