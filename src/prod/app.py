@@ -72,7 +72,7 @@ async def main():
                         if area >= min_area_threshold:
                             detection = [[x1, y1, x2 - x1, y2 - y1], conf, cls_id]
                             detections.append(detection)
-                            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                            # cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
             if detections:
                 tracks = tracker.update_tracks(detections, frame=frame)
@@ -124,15 +124,15 @@ async def main():
 
                     # Draw tracked box
                     cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 255, 255), 2)
-                    cv2.putText(
-                        frame,
-                        f"ID: {track_id}",
-                        (x1, y1 - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        1,
-                        (255, 255, 255),
-                        2,
-                    )
+                    # cv2.putText(
+                    #     frame,
+                    #     f"ID: {track_id}",
+                    #     (x1, y1 - 10),
+                    #     cv2.FONT_HERSHEY_SIMPLEX,
+                    #     1,
+                    #     (255, 255, 255),
+                    #     2,
+                    # )
 
                     # Extract vehicle image and calculate quality metrics
                     vehicle_image = frame[y1:y2, x1:x2]
