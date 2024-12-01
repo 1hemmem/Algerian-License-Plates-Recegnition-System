@@ -113,7 +113,7 @@ async def main(video_path):
                                 current_date = now.date()
                                 new_path = os.path.join(
                                     path,
-                                    f"lp: {plate_number} _time: {current_hour}:{current_minute}:{current_second}.{current_date}.jpg",
+                                    f"time: {current_hour}:{current_minute}:{current_second}.{current_date}_plate_number: {plate_number}.jpg",
                                 )
 
                                 os.rename(plate_path, new_path)
@@ -144,7 +144,7 @@ async def main(video_path):
                         continue
 
                     # Draw tracked box
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 255, 255), 2)
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
                     # cv2.putText(
                     #     frame,
                     #     f"ID: {track_id}",
