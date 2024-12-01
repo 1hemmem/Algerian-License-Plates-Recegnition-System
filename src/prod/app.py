@@ -1,3 +1,4 @@
+import argparse
 import logging
 import cv2
 import numpy as np
@@ -8,12 +9,12 @@ import os
 from GeminiOcr import GeminiOCR
 from Utils import Utils
 from Filter import ImageProcessor, LicensePlateDetector
-
+import datetime
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-async def main():
+async def main(video_path):
     # Initialize the OCR model
     ocr = GeminiOCR(api_key=os.environ["GEMINI_API_KEY"], model_name="gemini-1.5-pro")
 
@@ -28,8 +29,9 @@ async def main():
         max_cosine_distance=0.3,
         nn_budget=100,
     )
-
-    cap = cv2.VideoCapture("../../../Iphone_data/output1.mp4")
+    if video_path is None:
+        video_path = "../../../Iphone_data/output1.mp4"
+    cap = cv2.VideoCapture()
     if not cap.isOpened():
         logger.error("Error: Could not open video file")
         return
@@ -98,7 +100,13 @@ async def main():
                             # Only try to rename if we got a valid plate number
                             if plate_number and isinstance(plate_number, str):
                                 path, _ = os.path.split(plate_path)
-                                new_path = os.path.join(path, f"{plate_number}.jpg")
+                                now = datetime.datetime.now()
+                                current_hour = now.hour
+                                current_minute = now.minute
+                                current_second = now.second
+                                current_date = now.date()
+                                new_path = os.path.join(path, f"lp: {plate_number} _time: {current_hour}:{current_minute}:{current_second}.{current_date}.jpg")
+
                                 os.rename(plate_path, new_path)
                             else:
                                 logger.warning(f"Invalid plate number returned for track {track_id}: {plate_number}")
@@ -201,4 +209,8 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    parser = argparse.ArgumentParser(description="Vehicle detection and tracking.")
+    parser.add_argument("--path", type=str, required=True, help="Path to the input video file.")
+    args = parser.parse_args()
+    
+    asyncio.run(main(args.path))
